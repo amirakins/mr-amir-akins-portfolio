@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Giraffe Index Zoo</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif;
+            background-color: #fff9c4;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        h1 {
+            color: #f57f17;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        .mode-buttons {
+            margin-bottom: 20px;
+        }
+        .mode-btn {
+            background-color: #ddd;
+            border: 2px solid #aaa;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            border-radius: 10px 10px 0 0;
+            margin: 0 5px;
+            font-family: inherit;
+        }
+        .mode-btn.active {
+            background-color: #f57f17;
+            color: white;
+            border-color: #f57f17;
+            font-weight: bold;
+        }
+        .instructions {
+            font-size: 1.1em;
+            background: #fff;
+            padding: 15px;
+            border-radius: 10px;
+            max-width: 750px;
+            margin: 0 auto 20px auto;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .code-editor {
+            background-color: #2d2d2d;
+            color: #a6e22e;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1.5em;
+            text-align: left;
+            padding: 20px;
+            border-radius: 10px;
+            width: fit-content;
+            margin: 0 auto 20px auto;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+            border: 4px solid #555;
+            line-height: 1.8;
+        }
+        .keyword { color: #f92672; }
+        .function { color: #66d9ef; }
+        .number { color: #ae81ff; }
+        .comment { color: #75715e; font-size: 0.8em; }
+        
+        .code-input {
+            background-color: #1e1e1e;
+            color: #ae81ff;
+            border: 2px dashed #f92672;
+            border-radius: 5px;
+            font-size: 1em;
+            font-family: 'Courier New', Courier, monospace;
+            width: 50px;
+            text-align: center;
+        }
+
+        #toolbar {
+            background-color: #ffe082;
+            padding: 10px;
+            border-radius: 10px;
+            display: inline-block;
+            margin-bottom: 20px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border: 2px solid #ffca28;
+        }
+        #toolbar input {
+            font-size: 1.2em;
+            width: 50px;
+            text-align: center;
+            border-radius: 5px;
+            border: 2px solid #333;
+        }
+
+        .zoo-row {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .slot {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 65px;
+            transition: transform 0.1s;
+            border-radius: 10px;
+            padding: 5px;
+            border: 2px solid transparent;
+        }
+        .slot.clickable {
+            cursor: pointer;
+        }
+        .slot.clickable:hover {
+            transform: scale(1.05);
+            background-color: #fff59d;
+        }
+        .slot.selected {
+            background-color: #ffe082;
+            border: 2px dashed #f57f17;
+        }
+        .index-label {
+            background-color: #ffeb3b;
+            width: 100%;
+            padding: 5px 0;
+            font-weight: bold;
+            border: 2px solid #fbc02d;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.2);
+        }
+        .blocks-container {
+            height: 125px;
+            display: flex;
+            flex-direction: column-reverse; /* Stacks from bottom up */
+            justify-content: flex-start;
+            gap: 2px;
+            margin-bottom: 5px;
+            width: 100%;
+        }
+        .block {
+            background-color: #4caf50;
+            height: 23px;
+            width: 100%;
+            border-radius: 4px;
+            border: 2px solid #388e3c;
+        }
+        .animal-icon {
+            font-size: 2.5em;
+        }
+
+        .controls {
+            margin-top: 10px;
+        }
+        button.action-btn {
+            background-color: #f57f17;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            border-radius: 10px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+            transition: background-color 0.2s;
+            font-family: inherit;
+        }
+        button.action-btn:hover {
+            background-color: #e65100;
+        }
+        
+        #message {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-top: 20px;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🦒 The Giraffe Index Zoo</h1>
+    
+    <div class="mode-buttons">
+        <button id="btn-read" class="mode-btn active" onclick="setMode('read')">Read Code Mode</button>
+        <button id="btn-write" class="mode-btn" onclick="setMode('write')">Write Code Mode</button>
+    </div>
+
+    <div id="instructions" class="instructions">
+        <!-- Filled by JS -->
+    </div>
+
+    <!-- Dynamic Code Display -->
+    <div class="code-editor" id="code-display">
+        <!-- Filled by JS -->
+    </div>
+
+    <!-- Toolbar for Read Mode -->
+    <div id="toolbar">
+        Block Brush (Height): 
+        <input type="number" id="brush-height" min="1" max="5" value="4" oninput="updateHeightsFromBrush()">
+        <span style="font-size: 0.8em; font-weight: normal; margin-left: 10px;">(Changes all selected giraffes instantly)</span>
+    </div>
+
+    <!-- The 0-11 List Elements -->
+    <div class="zoo-row" id="zoo-container">
+        <!-- Filled by JS -->
+    </div>
+
+    <div class="controls">
+        <button class="action-btn" onclick="checkAnswer()">Check Answer 🚀</button>
+    </div>
+    <div id="message"></div>
+
+    <script>
+        let currentMode = 'read';
+        let rangeType = 2; // 1 = range(stop), 2 = range(start, stop)
+        let targetStart = 0;
+        let targetStop = 0;
+        let targetHeight = 0;
+        
+        let giraffeHeights = new Array(12).fill(0); 
+        let isGiraffeSelected = new Array(12).fill(false); // Tracks which giraffes the user clicked
+
+        function getRandomInt(min, max) {
+            return Math.floor(Math.random() * (max - min + 1)) + min;
+        }
+
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-read').classList.toggle('active', mode === 'read');
+            document.getElementById('btn-write').classList.toggle('active', mode === 'write');
+            generateLevel();
+        }
+
+        function generateLevel() {
+            // Randomly decide if this is a 1-argument or 2-argument range
+            rangeType = Math.random() < 0.5 ? 1 : 2;
+
+            if (rangeType === 1) {
+                targetStart = 0; // 1-argument range always starts at 0
+                targetStop = getRandomInt(2, 11);
+            } else {
+                targetStart = getRandomInt(1, 7); // Start > 0 to make it clear it's a 2-arg range
+                targetStop = getRandomInt(targetStart + 2, 11);
+            }
+            
+            targetHeight = getRandomInt(1, 5);
+            giraffeHeights = new Array(12).fill(0);
+            isGiraffeSelected = new Array(12).fill(false);
+
+            document.getElementById("message").innerText = "";
+
+            if (currentMode === 'read') {
+                document.getElementById('instructions').innerHTML = "<strong>Read Mode:</strong> Read the Python code. Click giraffes to select/unselect them. Adjust your block brush to change their height.<br><span style='color: #d32f2f;'>💡 Hint: If <code>range()</code> has only ONE number, it automatically starts at index 0!</span>";
+                document.getElementById('toolbar').style.display = "inline-block";
+                
+                let rangeHTML = rangeType === 1 
+                    ? `<span class="number">${targetStop}</span>`
+                    : `<span class="number">${targetStart}</span>, <span class="number">${targetStop}</span>`;
+
+                document.getElementById('code-display').innerHTML = `
+                    <span class="comment"># Set the giraffes' height</span><br>
+                    <span class="keyword">for</span> index <span class="keyword">in</span> <span class="function">range</span>(${rangeHTML}):<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;giraffes[index].height = <span class="number">${targetHeight}</span>
+                `;
+            } else {
+                document.getElementById('instructions').innerHTML = "<strong>Write Mode:</strong> Look at the giraffes below. Fill in the code! <br><span style='color: #d32f2f;'>💡 Hint: Some loops use <code>range(start, stop)</code> and some just use <code>range(stop)</code>!</span>";
+                document.getElementById('toolbar').style.display = "none";
+                
+                // Pre-fill the correct heights visually
+                for (let i = targetStart; i < targetStop; i++) {
+                    giraffeHeights[i] = targetHeight;
+                }
+
+                let rangeInputs = rangeType === 1
+                    ? `<input type="number" id="input-stop" class="code-input" placeholder="stop">`
+                    : `<input type="number" id="input-start" class="code-input" placeholder="start">, <input type="number" id="input-stop" class="code-input" placeholder="stop">`;
+
+                document.getElementById('code-display').innerHTML = `
+                    <span class="comment"># Fill in the blanks</span><br>
+                    <span class="keyword">for</span> index <span class="keyword">in</span> <span class="function">range</span>(${rangeInputs}):<br>
+                    &nbsp;&nbsp;&nbsp;&nbsp;giraffes[index].height = <input type="number" id="input-height" class="code-input">
+                `;
+            }
+
+            renderZoo();
+        }
+
+        function handleGiraffeClick(index) {
+            if (currentMode === 'read') {
+                // Toggle selection on click
+                isGiraffeSelected[index] = !isGiraffeSelected[index];
+                updateHeightsFromBrush();
+            }
+        }
+
+        // Applies the current brush height to ALL currently selected giraffes
+        function updateHeightsFromBrush() {
+            if (currentMode !== 'read') return;
+            
+            const brushValue = parseInt(document.getElementById('brush-height').value) || 1;
+            const validHeight = Math.max(1, Math.min(5, brushValue)); // Keep between 1 and 5
+            
+            for (let i = 0; i < 12; i++) {
+                if (isGiraffeSelected[i]) {
+                    giraffeHeights[i] = validHeight;
+                } else {
+                    giraffeHeights[i] = 0; // Unselected giraffes lose their blocks
+                }
+            }
+            renderZoo();
+        }
+
+        function renderZoo() {
+            const container = document.getElementById("zoo-container");
+            container.innerHTML = "";
+
+            for (let i = 0; i < 12; i++) {
+                const slot = document.createElement("div");
+                
+                // Add classes for clickability and selection styling
+                let classes = "slot";
+                if (currentMode === 'read') classes += " clickable";
+                if (isGiraffeSelected[i]) classes += " selected";
+                slot.className = classes;
+
+                if (currentMode === 'read') {
+                    slot.onclick = () => handleGiraffeClick(i);
+                }
+
+                let blocksHtml = "";
+                for (let b = 0; b < giraffeHeights[i]; b++) {
+                    blocksHtml += `<div class="block"></div>`;
+                }
+
+                slot.innerHTML = `
+                    <div class="index-label">${i}</div>
+                    <div class="blocks-container">
+                        ${blocksHtml}
+                    </div>
+                    <div class="animal-icon">🦒</div>
+                `;
+                container.appendChild(slot);
+            }
+        }
+
+        function checkAnswer() {
+            const messageBox = document.getElementById("message");
+            let isCorrect = true;
+
+            if (currentMode === 'read') {
+                for (let i = 0; i < 12; i++) {
+                    const expectedHeight = (i >= targetStart && i < targetStop) ? targetHeight : 0;
+                    if (giraffeHeights[i] !== expectedHeight) {
+                        isCorrect = false;
+                        break;
+                    }
+                }
+            } else {
+                let userStart = 0;
+                let userStop = parseInt(document.getElementById('input-stop').value);
+                let userHeight = parseInt(document.getElementById('input-height').value);
+
+                // If it's a 2-argument range challenge, grab the start input
+                if (rangeType === 2) {
+                    userStart = parseInt(document.getElementById('input-start').value);
+                }
+
+                if (userStart !== targetStart || userStop !== targetStop || userHeight !== targetHeight) {
+                    isCorrect = false;
+                }
+            }
+
+            if (isCorrect) {
+                messageBox.innerText = "✅ Excellent! The code matches the zoo perfectly!";
+                messageBox.style.color = "#4caf50";
+                
+                setTimeout(() => {
+                    generateLevel();
+                }, 2500);
+            } else {
+                if (currentMode === 'read') {
+                    messageBox.innerText = "❌ Bug found! Did you select the right giraffes? Remember to stop BEFORE the last number.";
+                } else {
+                    messageBox.innerText = "❌ Bug found! Check your start, stop, and height numbers carefully.";
+                }
+                messageBox.style.color = "#f44336";
+            }
+        }
+
+        // Initialize the first level
+        generateLevel();
+    </script>
+</body>
+</html>
